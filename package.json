@@ -1,0 +1,31 @@
+{
+  "name": "guille-portfolio",
+  "version": "1.0.0",
+  "description": "Portfolio personal con escenas 3D en React + Three.js",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --dir client dev",
+    "build": "pnpm --dir client build",
+    "preview": "pnpm --dir client preview",
+    "lint": "pnpm --dir client lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky"
+  },
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.17.0",
+      "onFail": "download"
+    }
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
+    "husky": "^9.1.7",
+    "prettier": "^3.9.9"
+  }
+}
