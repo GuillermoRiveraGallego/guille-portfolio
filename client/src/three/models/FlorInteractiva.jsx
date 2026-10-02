@@ -5,8 +5,7 @@ import { Euler, Quaternion } from 'three';
 
 import { MODELS } from '@/config/models';
 
-// Ángulos en radianes sobre el eje Y local de cada pétalo (+ abre hacia fuera, - cierra hacia el centro).
-const PETAL_CLOSED = -1.15;
+// Ángulos en radianes sobre el eje Y local de cada pétalo (+ abre hacia fuera).
 const PETAL_HOVER = 0.35;
 const PETAL_BREATH = 0.03;
 
@@ -28,7 +27,6 @@ function targetFromBase(base, x, y, z) {
 // (Cabeza_Flor, Petalo_N, Estambre_NN) para animarlo desde código.
 function FlorInteractiva(props) {
   const { scene } = useGLTF(MODELS.florInteractiva);
-  const [isOpen, setIsOpen] = useState(true);
   const [hoveredPetal, setHoveredPetal] = useState(null);
 
   useCursor(hoveredPetal !== null);
@@ -67,10 +65,9 @@ function FlorInteractiva(props) {
     );
 
     petals.forEach(({ node, base }, i) => {
-      const open = isOpen ? 0 : PETAL_CLOSED;
-      const hover = isOpen && hoveredPetal === node.name ? PETAL_HOVER : 0;
+      const hover = hoveredPetal === node.name ? PETAL_HOVER : 0;
       const breath = Math.sin(t * 1.2 + i * 1.3) * PETAL_BREATH;
-      node.quaternion.slerp(targetFromBase(base, 0, open + hover + breath, 0), k);
+      node.quaternion.slerp(targetFromBase(base, 0, hover + breath, 0), k);
     });
 
     stamens.forEach(({ node, base }, i) => {
@@ -88,19 +85,11 @@ function FlorInteractiva(props) {
     if (event.object.name === hoveredPetal) setHoveredPetal(null);
   };
 
-  const handleClick = event => {
-    event.stopPropagation();
-    // Si el puntero se ha movido es que se estaba orbitando la cámara, no haciendo clic.
-    if (event.delta > 4) return;
-    setIsOpen(open => !open);
-  };
-
   return (
     <primitive
       object={rig.root}
       onPointerOver={handlePointerOver}
       onPointerOut={handlePointerOut}
-      onClick={handleClick}
       {...props}
     />
   );

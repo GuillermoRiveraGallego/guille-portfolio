@@ -31,9 +31,7 @@ function Home() {
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between px-6 pb-10 md:px-10">
         <p className="text-sm text-muted-foreground">Portfolio</p>
-        <p className="text-xs text-muted-foreground">
-          Pasa por los pétalos · clic para abrir o cerrar
-        </p>
+        <p className="text-xs text-muted-foreground">Pasa el ratón por los pétalos</p>
       </div>
     </section>
   );
