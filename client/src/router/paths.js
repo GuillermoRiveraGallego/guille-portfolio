@@ -2,4 +2,5 @@
 export const PATHS = {
   home: '/',
   about: '/sobre-mi',
+  contact: '/contacto',
 };

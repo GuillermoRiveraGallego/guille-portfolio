@@ -66,7 +66,8 @@ client/src/
 ├── index.css             # Tailwind + tokens de shadcn (variables CSS, modo .dark)
 ├── components/
 │   ├── ui/               # componentes shadcn (generados, se tocan lo mínimo)
-│   └── layout/           # layout común a las rutas (RootLayout, Navbar...)
+│   ├── layout/           # layout común a las rutas (RootLayout, Navbar...)
+│   └── hero/             # piezas HTML del hero (HeroIntro, SwapText)
 ├── config/               # constantes de la app (p. ej. rutas de modelos 3D)
 ├── lib/                  # utilidades puras (utils.js → cn)
 ├── pages/                # una página por ruta
@@ -76,7 +77,7 @@ client/src/
 │   ├── routes.jsx        # árbol de rutas
 │   └── router.jsx        # createBrowserRouter(routes)
 ├── services/             # (con API) api.js: axios.create({ baseURL: '/api' })
-├── hooks/                # (cuando haga falta) hooks propios, alias @/hooks
+├── hooks/                # hooks propios (useMediaQuery...)
 └── three/                # todo lo que vive dentro de un <Canvas> (ver sección 4)
 ```
 
@@ -157,14 +158,22 @@ código que se renderiza dentro de un `<Canvas>` va en `src/three/`, separado de
 src/three/
 ├── canvas/
 │   ├── SceneCanvas.jsx       # <Canvas> base: dpr, cámara, tone mapping, <Suspense>
-│   └── CanvasLoader.jsx      # % de carga (useProgress) mientras llegan los assets
+│   ├── ViewOffset.jsx        # desplaza el encuadre (modelo a un lado sin cambiar tamaño)
+│   └── CanvasLoader.jsx      # % de carga (overlay DOM con useProgress, fuera del <Canvas>)
+├── effects/                  # atmósfera: Pollen (Points + shader), DriftingPetal
+├── interaction/              # AirTracker: velocidad del cursor → ráfaga de aire
 ├── lighting/
 │   ├── StudioEnvironment.jsx # entorno de reflejos con Lightformers (sin HDRI externo)
-│   └── GradientBackground.jsx# fondo degradado dentro de la escena
-└── models/
-    ├── FlorCristal.jsx       # un componente por modelo GLB
-    ├── FlorNatural.jsx
-    └── FlorInteractiva.jsx   # modelo con pivotes, animado e interactivo desde código
+│   ├── GradientBackground.jsx# fondo degradado dentro de la escena
+│   └── LightDrift.jsx        # variación lenta de environmentIntensity (nubes)
+├── models/
+│   ├── FlorCristal.jsx       # un componente por modelo GLB
+│   ├── FlorNatural.jsx
+│   ├── FlorInteractiva.jsx   # conecta el rig con React (eventos + useFrame)
+│   └── flor/                 # lógica de animación en clases Three, sin React
+│       ├── FlowerRig.js      # tallo, cabeza, estambres, orquesta los pétalos
+│       └── PetalController.js# estado y transformación de cada pétalo
+└── utils/                    # noise.js (ruido 1D / fbm), spring.js (muelle amortiguado)
 ```
 
 ### Reglas 3D
@@ -182,14 +191,31 @@ src/three/
 - **Modelos interactivos** (p. ej. `FlorInteractiva`):
   - El GLB se exporta con una pieza por nodo y el **pivote en la base** de cada pieza que se mueve
     (`Cabeza_Flor`, `Petalo_N`, `Estambre_NN`). Los nombres de los nodos son el contrato con el código.
-  - Se clona la escena (`scene.clone(true)`) y se guarda la rotación original de cada nodo. Cada
-    frame se calcula `original * desplazamiento` y se interpola con `slerp` amortiguado por `delta`,
-    para que no dependa de los FPS.
+  - La animación vive en **clases Three sin React** (`FlowerRig`, `PetalController`): se crean una vez
+    en `useMemo` y se actualizan en `useFrame` mutando los objetos. Nada de `setState` ni objetos
+    nuevos por frame (vectores temporales a nivel de módulo).
+  - Se clona la escena (`scene.clone(true)`) y se guarda la transformación original de cada nodo.
+    Cada frame se calcula `original * desplazamiento`. Las transiciones usan **muelles** (`Spring`),
+    no interpolaciones lineales, para tener inercia física.
+  - Movimiento idle con **ruido** (`fbm1D`), no con senos perfectos: no se repite y se siente orgánico.
+    Si un efecto se nota como "animación web", se baja su amplitud.
+  - Cada pieza con comportamiento propio tiene su controlador con un **estado** (`PetalController.mode`).
+    Animaciones futuras (p. ej. el pétalo que se desprende y cae al hacer clic) se añaden como estados
+    nuevos de ese controlador, sin tocar el resto.
   - Los parámetros de animación (ángulos, velocidades) van como constantes al principio del archivo.
   - Eventos de R3F (`onPointerOver`, `onClick`) sobre el `<primitive>`. En `onClick` se ignora el clic
     si `event.delta` es grande, porque en ese caso el usuario estaba orbitando la cámara.
   - Si el modelo reacciona al puntero, la cámara no rota sola y su órbita se limita a la parte
-    frontal.
+    frontal. El cursor no "dirige" el modelo: solo transmite su velocidad como aire (`AirTracker`),
+    atenuada por la distancia.
+  - **3D ↔ UI**: el modelo no conoce la interfaz. Expone callbacks (`onPetalHover(section)`,
+    `onPetalSelect(section)`), la página guarda el estado y se lo pasa a los componentes HTML.
+    Qué representa cada pieza se define en `config/` (`config/petals.js`: nodo → sección), no en
+    el componente 3D.
+- **Composición**: para mover un modelo a un lado de la pantalla no se encoge el canvas ni se mueve
+  la escena. Se usa `three/canvas/ViewOffset` (`camera.setViewOffset`), que mantiene el tamaño, el
+  fondo a pantalla completa y el raycasting correcto. Los valores por breakpoint van en una
+  constante de la página, con `useMediaQuery` de `@/hooks`.
 - **Iluminación/entorno**: los materiales de cristal necesitan un `Environment` para tener reflejos.
   Usamos `Lightformer`s locales para no depender de HDRIs de un CDN. Además, el fondo tiene que estar
   **dentro de la escena** (`scene.background`), porque si se pone en CSS el cristal no lo refracta.
@@ -201,6 +227,12 @@ src/three/
   - Las páginas 3D siempre se cargan con lazy route (three no va en el bundle inicial).
   - Cualquier recurso creado a mano (`CanvasTexture`, geometrías, materiales) se crea en `useMemo` y
     se libera con `dispose()` en el cleanup de `useEffect`.
+  - Efectos de atmósfera baratos: partículas con un único `Points` animado en el shader (la CPU solo
+    actualiza uniforms), luz variando un uniform (`scene.environmentIntensity`), elementos sueltos
+    reutilizando geometría y material del GLB. Profundidad de campo simulada por partícula en el
+    shader en vez de postprocesado: el modelo principal nunca se desenfoca.
+  - En móvil: DPR máximo 1.5 y menos efectos. Siempre se respeta `prefers-reduced-motion` (sin idle,
+    sin partículas en movimiento ni elementos que crucen la escena; el hover sigue funcionando).
   - Los GLB son pesados (~7 MB). Si crecen, se comprimen con `gltf-transform` (Draco/Meshopt +
     texturas KTX2) antes de subirlos.
 - **UI sobre la escena**: el HTML (títulos, textos) va en un `div` absoluto encima del canvas con
