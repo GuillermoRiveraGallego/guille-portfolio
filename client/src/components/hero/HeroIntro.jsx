@@ -1,7 +1,8 @@
 import SwapText from '@/components/hero/SwapText';
 
 // Bloque de texto del hero. La segunda línea del título muestra la sección del pétalo bajo el
-// puntero y vuelve a "Rivera." al salir.
+// puntero y vuelve a "Rivera." al salir; el índice de abajo muestra su número y nombre, los mismos
+// que encabezan la sección a la que lleva.
 function HeroIntro({ activeSection }) {
   return (
     <div className="max-w-md">
@@ -19,7 +20,13 @@ function HeroIntro({ activeSection }) {
       </p>
 
       <div className="mt-8 text-foreground/55 md:mt-24">
-        <p className="text-[0.65rem] tracking-[0.22em] tabular-nums">01 — EXPLORA</p>
+        <p className="text-[0.65rem] tracking-[0.22em] uppercase tabular-nums">
+          <SwapText
+            text={
+              activeSection ? `${activeSection.number} — ${activeSection.title}` : '01 — Explora'
+            }
+          />
+        </p>
         <p className="mt-3 text-[0.8rem] leading-relaxed">Toca un pétalo para descubrir</p>
         <span aria-hidden className="mt-3 block text-[0.8rem]">
           ↓

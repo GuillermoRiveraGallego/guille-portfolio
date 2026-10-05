@@ -2,6 +2,7 @@ import { Euler, Group, Quaternion, Vector3 } from 'three';
 
 import { PETAL_SECTIONS } from '@/config/petals';
 import { PetalController } from '@/three/models/flor/PetalController';
+import { analyzePetalLayering } from '@/three/models/flor/petalLayering';
 import { fbm1D } from '@/three/utils/noise';
 import { Spring } from '@/three/utils/spring';
 
@@ -18,8 +19,13 @@ const HEAD_AIR = 0.12;
 
 const STAMEN_IDLE = { amount: 0.022, speed: 0.35 };
 
+// Reacción de la flor cuando se arranca un pétalo (impulsos en rad/s): tirón hacia el pétalo
+// mientras resiste y rebote al soltarse. Tiene que ser casi imperceptible.
+const DETACH_REACTION = { pull: 0.05, recoil: 0.09, neighborPull: 0.1, neighbor: 0.25, stem: 0.01 };
+
 const tmpEuler = new Euler();
 const tmpQuat = new Quaternion();
+const tmpNormal = new Vector3();
 
 // Ángulos del tallo en un instante: suma de ruido lento, nunca exactamente periódica.
 function stemAngles(t) {
@@ -62,6 +68,8 @@ export class FlowerRig {
     // Más blanda que los pétalos: la cabeza pesa más y responde más despacio.
     const headSpring = () => new Spring({ stiffness: 45, damping: 8 });
     this.headSprings = { x: headSpring(), y: headSpring(), z: headSpring() };
+    // Oscilación lenta del tallo al soltarse un pétalo (se suma al balanceo con ruido).
+    this.stemSpring = new Spring({ stiffness: 20, damping: 2.5 });
 
     this.petals = Object.keys(PETAL_SECTIONS).map(
       (name, i) => new PetalController(this.root.getObjectByName(name), i)
@@ -80,17 +88,74 @@ export class FlowerRig {
     return this.petalsByName.get(name);
   }
 
+  isNeighbor(a, b) {
+    const count = this.petals.length;
+    return b === (a + 1) % count || b === (a - 1 + count) % count;
+  }
+
   // El pétalo bajo el cursor se separa; sus dos vecinos reaccionan de forma casi imperceptible.
   setHoveredPetal(name) {
     this.hovered = name;
     const index = this.petals.findIndex(petal => petal.name === name);
-    const count = this.petals.length;
 
     this.petals.forEach((petal, i) => {
-      const isNeighbor =
-        index >= 0 && (i === (index + 1) % count || i === (index - 1 + count) % count);
-      petal.setHover(i === index, isNeighbor);
+      petal.setHover(i === index, index >= 0 && this.isNeighbor(index, i));
     });
+  }
+
+  // Impulso de la cabeza en la dirección del pétalo (amount > 0 hacia él, < 0 en contra).
+  kickHead(petal, amount) {
+    this.headSprings.y.kick(petal.outward2D.x * amount);
+    this.headSprings.x.kick(-petal.outward2D.y * amount);
+  }
+
+  kickNeighbors(petal, lift, twist = 0) {
+    for (const other of this.petals) {
+      if (!this.isNeighbor(petal.index, other.index)) continue;
+      other.springs.lift.kick(lift);
+      other.springs.twist.kick(
+        other.index === (petal.index + 1) % this.petals.length ? twist : -twist
+      );
+    }
+  }
+
+  neighborsOf(petal) {
+    return this.petals.filter(other => this.isNeighbor(petal.index, other.index));
+  }
+
+  // Normal de la flor (+Z local de la cabeza) en el mundo: hacia donde mira la flor.
+  getNormal(target) {
+    this.head.updateWorldMatrix(true, false);
+    return target.setFromMatrixColumn(this.head.matrixWorld, 2).normalize();
+  }
+
+  // Centro real de la flor en el mundo (los pivotes de los pétalos están casi en él).
+  getCenter(target) {
+    return this.head.getWorldPosition(target);
+  }
+
+  // Cómo se solapa el pétalo con sus vecinos (se mide una vez y se guarda; ver petalLayering).
+  analyzeLayering(name) {
+    const petal = this.getPetal(name);
+    return analyzePetalLayering(petal, this.neighborsOf(petal), this.getNormal(tmpNormal));
+  }
+
+  // Clic: el pétalo se despega por la punta y tira levemente de la cabeza y de sus vecinos.
+  beginPeel(name, pose) {
+    const petal = this.getPetal(name);
+    petal.peel(pose);
+    this.kickHead(petal, DETACH_REACTION.pull);
+    this.kickNeighbors(petal, DETACH_REACTION.neighborPull);
+  }
+
+  // El pétalo se suelta: la flor rebota al perder la tensión y los vecinos vuelven a su sitio.
+  releasePetal(name) {
+    const petal = this.getPetal(name);
+    petal.release();
+    this.kickHead(petal, -DETACH_REACTION.recoil);
+    this.kickNeighbors(petal, -DETACH_REACTION.neighbor, DETACH_REACTION.neighbor * 0.3);
+    this.stemSpring.kick(-petal.outward2D.x * DETACH_REACTION.stem);
+    this.setHoveredPetal(null);
   }
 
   // `air`: ráfaga del cursor ya atenuada por velocidad y distancia ({ dirX, dirY, strength }).
@@ -98,7 +163,7 @@ export class FlowerRig {
   update(dt, time, air, motion) {
     // Tallo.
     const stem = motion ? stemAngles(time) : { side: 0, depth: 0 };
-    this.sway.rotation.set(stem.depth, 0, stem.side);
+    this.sway.rotation.set(stem.depth, 0, stem.side + this.stemSpring.update(dt, 0));
 
     // Cabeza: su orientación absoluta es la del tallo hace HEAD_LAG segundos (retraso), más un
     // pequeño ruido propio y las ráfagas del cursor.

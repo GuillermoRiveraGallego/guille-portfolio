@@ -16,14 +16,24 @@ const AIR = { lift: 0.3, twist: 0.12 };
 
 const SPRING = { stiffness: 70, damping: 11 };
 
+// Peel (clic): la punta empieza a levantarse mientras la base sigue unida (el pivote del GLB está
+// en la base), con una torsión que aparta el lado tapado por el vecino de delante, y se separa un
+// poco del centro. Muy sutil y con muelles rígidos para que ocurra en ~150 ms.
+// `lift` y `twist` llegan ya con signo desde PetalTransitionController (según petalLayering).
+const PEEL = { push: 0.002, tremble: 0.008, trembleSpeed: 14 };
+const PEEL_SPRING = { stiffness: 190, damping: 15 };
+
 const tmpEuler = new Euler();
 const tmpQuat = new Quaternion();
 
-// Estados del pétalo. Ahora solo existe 'attached'. La futura animación de clic
-// (desprenderse → caer con gravedad y resistencia del aire → flutter → hacia la cámara) será un
-// estado nuevo que tome el control de `node` sin afectar al resto de la flor.
+// Estados del pétalo:
+// - attached: en la flor (idle, hover y aire).
+// - peeling: se despega por la punta, todavía unido a la flor por la base.
+// - detached: ya no pertenece a la flor; PetalTransitionController mueve `node` y aquí no se toca.
 export const PETAL_MODE = {
   attached: 'attached',
+  peeling: 'peeling',
+  detached: 'detached',
 };
 
 export class PetalController {
@@ -68,12 +78,40 @@ export class PetalController {
     this.springs.twist.kick(across * strength * AIR.twist * variation * dt * 60);
   }
 
+  // `pose`: { lift, twist } en radianes (ejes locales, como el hover).
+  peel(pose) {
+    this.mode = PETAL_MODE.peeling;
+    this.peelPose = pose;
+    for (const spring of Object.values(this.springs)) {
+      spring.stiffness = PEEL_SPRING.stiffness;
+      spring.damping = PEEL_SPRING.damping;
+    }
+  }
+
+  release() {
+    this.mode = PETAL_MODE.detached;
+  }
+
   update(dt, time, motion) {
     switch (this.mode) {
+      case PETAL_MODE.detached:
+        return;
+      case PETAL_MODE.peeling:
+        this.updatePeeling(dt, time, motion);
+        return;
       case PETAL_MODE.attached:
       default:
         this.updateAttached(dt, time, motion);
     }
+  }
+
+  updatePeeling(dt, time, motion) {
+    const tremble = motion ? fbm1D(time * PEEL.trembleSpeed, this.seed + 21) * PEEL.tremble : 0;
+    this.applyPose(
+      this.springs.lift.update(dt, this.peelPose.lift + tremble),
+      this.springs.twist.update(dt, this.peelPose.twist + tremble * 0.5),
+      this.springs.push.update(dt, PEEL.push)
+    );
   }
 
   updateAttached(dt, time, motion) {
@@ -84,7 +122,10 @@ export class PetalController {
     const lift = this.springs.lift.update(dt, this.hoverAmount * HOVER.lift + idleLift);
     const twist = this.springs.twist.update(dt, this.hoverAmount * HOVER.twist + idleTwist);
     const push = this.springs.push.update(dt, this.hoverAmount * HOVER.push);
+    this.applyPose(lift, twist, push);
+  }
 
+  applyPose(lift, twist, push) {
     this.node.quaternion
       .copy(this.baseQuaternion)
       .multiply(tmpQuat.setFromEuler(tmpEuler.set(twist, lift, 0)));

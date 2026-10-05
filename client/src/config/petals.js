@@ -1,10 +1,11 @@
-// Cada pétalo del GLB (nombre del nodo) representa una sección del portfolio.
-// `label` es el texto que sustituye a "Rivera." en el título al pasar por el pétalo.
-// Cuando existan las secciones se añadirá aquí su destino (ruta o ancla).
+import { SECTIONS } from '@/config/sections';
+
+// Cada pétalo del GLB (nombre del nodo) representa una sección del portfolio. El orden sigue la
+// flor en sentido antihorario empezando por el pétalo de la derecha.
 export const PETAL_SECTIONS = {
-  Petalo_1: { id: 'react', label: 'React' },
-  Petalo_2: { id: 'node', label: 'Node.js' },
-  Petalo_3: { id: 'three', label: 'Three.js' },
-  Petalo_4: { id: 'bim', label: 'BIM / 3D' },
-  Petalo_5: { id: 'projects', label: 'Proyectos' },
+  Petalo_1: SECTIONS.web,
+  Petalo_2: SECTIONS.threeD,
+  Petalo_3: SECTIONS.ai,
+  Petalo_4: SECTIONS.bim,
+  Petalo_5: SECTIONS.performance,
 };

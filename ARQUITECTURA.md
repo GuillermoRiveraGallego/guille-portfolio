@@ -67,7 +67,8 @@ client/src/
 ├── components/
 │   ├── ui/               # componentes shadcn (generados, se tocan lo mínimo)
 │   ├── layout/           # layout común a las rutas (RootLayout, Navbar...)
-│   └── hero/             # piezas HTML del hero (HeroIntro, SwapText)
+│   ├── hero/             # piezas HTML del hero (HeroIntro, SwapText)
+│   └── transition/       # capa de la transición del pétalo que sobrevive al cambio de ruta
 ├── config/               # constantes de la app (p. ej. rutas de modelos 3D)
 ├── lib/                  # utilidades puras (utils.js → cn)
 ├── pages/                # una página por ruta
@@ -172,7 +173,8 @@ src/three/
 │   ├── FlorInteractiva.jsx   # conecta el rig con React (eventos + useFrame)
 │   └── flor/                 # lógica de animación en clases Three, sin React
 │       ├── FlowerRig.js      # tallo, cabeza, estambres, orquesta los pétalos
-│       └── PetalController.js# estado y transformación de cada pétalo
+│       ├── PetalController.js# estado y transformación de cada pétalo
+│       └── PetalTransitionController.js # clic → desprendimiento, caída y paso por la cámara
 └── utils/                    # noise.js (ruido 1D / fbm), spring.js (muelle amortiguado)
 ```
 
@@ -200,16 +202,17 @@ src/three/
   - Movimiento idle con **ruido** (`fbm1D`), no con senos perfectos: no se repite y se siente orgánico.
     Si un efecto se nota como "animación web", se baja su amplitud.
   - Cada pieza con comportamiento propio tiene su controlador con un **estado** (`PetalController.mode`).
-    Animaciones futuras (p. ej. el pétalo que se desprende y cae al hacer clic) se añaden como estados
-    nuevos de ese controlador, sin tocar el resto.
+    Las animaciones nuevas se añaden como estados de ese controlador, sin tocar el resto
+    (`attached` → `detaching` → `detached`).
   - Los parámetros de animación (ángulos, velocidades) van como constantes al principio del archivo.
   - Eventos de R3F (`onPointerOver`, `onClick`) sobre el `<primitive>`. En `onClick` se ignora el clic
-    si `event.delta` es grande, porque en ese caso el usuario estaba orbitando la cámara.
-  - Si el modelo reacciona al puntero, la cámara no rota sola y su órbita se limita a la parte
-    frontal. El cursor no "dirige" el modelo: solo transmite su velocidad como aire (`AirTracker`),
-    atenuada por la distancia.
+    si `event.delta` es grande, porque en ese caso es un arrastre.
+  - El modelo interactivo de la home no tiene controles de cámara: ni zoom ni órbita, se ve siempre
+    con el mismo encuadre. El cursor no "dirige" el modelo: solo transmite su velocidad como aire
+    (`AirTracker`), atenuada por la distancia.
   - **3D ↔ UI**: el modelo no conoce la interfaz. Expone callbacks (`onPetalHover(section)`,
-    `onPetalSelect(section)`), la página guarda el estado y se lo pasa a los componentes HTML.
+    `onPetalStart(section)`, `onPetalSelect(section, mask)`), la página guarda el estado y se lo
+    pasa a los componentes HTML.
     Qué representa cada pieza se define en `config/` (`config/petals.js`: nodo → sección), no en
     el componente 3D.
 - **Composición**: para mover un modelo a un lado de la pantalla no se encoge el canvas ni se mueve
@@ -221,7 +224,25 @@ src/three/
   **dentro de la escena** (`scene.background`), porque si se pone en CSS el cristal no lo refracta.
 - **Encuadre**: `<Bounds fit clip observe>` + `<Center>` en vez de poner a mano la posición de la
   cámara, para que cualquier modelo se encuadre solo sea cual sea su escala.
-- **Controles**: `OrbitControls` con `makeDefault` (lo necesita `Bounds`).
+- **Controles**: solo donde el modelo se pueda explorar, con `OrbitControls` + `makeDefault`.
+  `Bounds` funciona sin controles (la home no tiene).
+- **Transición de los pétalos** (home → `/web`, `/3d`, `/ai`, `/bim`, `/performance`):
+  - `PetalTransitionController` (máquina de estados `IDLE → HOVER → PEELING → ESCAPING →
+    RELEASED → FALLING → APPROACHING_CAMERA → COVERING_CAMERA → NAVIGATING → COMPLETE`) mueve el
+    propio mesh del pétalo en el render loop. Primero separación, después caída: el pétalo se
+    despega por la punta y sale de la flor por su propio lado sin gravedad hasta que su esfera
+    envolvente deja atrás la del resto de pétalos; luego el escape cede ante la física (gravedad,
+    resistencia, flutter con ruido), que al final se mezcla en pantalla + profundidad con una
+    trayectoria descentrada hacia la cámara. El pétalo llena el viewport por cercanía real.
+  - Los pétalos están imbricados: hacia dónde puede salir cada uno sin atravesar a sus vecinos se
+    mide sobre la geometría real con rayos (`flor/petalLayering.js`), en ratos libres tras montar.
+  - Debug (solo en desarrollo): `/?debug-petals` muestra centro de la flor, esferas, direcciones de
+    escape y el estado (`PetalTransitionDebug`).
+  - El cambio de ruta ocurre cuando el pétalo cubre la cámara. Como el canvas se desmonta con la
+    página, ese frame se copia en `components/transition/` (`TransitionVeil`, montado en
+    `RootLayout`), que continúa el paso del pétalo y se retira con un barrido sobre la nueva sección.
+  - Reduced motion: separación mínima y barrido del color del pétalo (`--petal`).
+  - Sonidos preparados pero desactivados en `lib/transitionSounds.js`.
 - **Rendimiento**:
   - `dpr={[1, 2]}` para limitar el pixel ratio en pantallas de alta densidad.
   - Las páginas 3D siempre se cargan con lazy route (three no va en el bundle inicial).
@@ -236,7 +257,7 @@ src/three/
   - Los GLB son pesados (~7 MB). Si crecen, se comprimen con `gltf-transform` (Draco/Meshopt +
     texturas KTX2) antes de subirlos.
 - **UI sobre la escena**: el HTML (títulos, textos) va en un `div` absoluto encima del canvas con
-  `pointer-events-none`, para no bloquear los controles. `<Html>` de drei solo se usa para cosas
+  `pointer-events-none`, para no bloquear la interacción con la escena. `<Html>` de drei solo se usa para cosas
   ancladas a un punto 3D.
 
 ---
