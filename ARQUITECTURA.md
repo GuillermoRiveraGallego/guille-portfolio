@@ -167,6 +167,14 @@ src/three/
 │   ├── StudioEnvironment.jsx # entorno de reflejos con Lightformers (sin HDRI externo)
 │   ├── GradientBackground.jsx# fondo degradado dentro de la escena
 │   └── LightDrift.jsx        # variación lenta de environmentIntensity (nubes)
+├── motorcycle/               # sección 3D Web (moto por piezas), clases Three sin React
+│   ├── MotorcycleScene.jsx   # conecta todo con R3F: luz, sombra, frame loop
+│   ├── MotorcycleRig.js      # piezas, despiece, hover/selección, modo técnico, proxies
+│   ├── CameraDirector.js     # planos por capítulo, foco, arrastre limitado, parallax
+│   ├── MotorcycleInteraction.js # puntero: raycasting contra proxies, clic, arrastre
+│   ├── motorcycleMaterials.js   # materiales del GLB + shader técnico (uTechnical/uDim)
+│   ├── modelStats.js         # datos reales del modelo (triángulos, materiales, archivo)
+│   └── ExperienceStore.js    # estado compartido página ↔ escena (sin estado de React)
 ├── models/
 │   ├── FlorCristal.jsx       # un componente por modelo GLB
 │   ├── FlorNatural.jsx
@@ -256,6 +264,13 @@ src/three/
     sin partículas en movimiento ni elementos que crucen la escena; el hover sigue funcionando).
   - Los GLB son pesados (~7 MB). Si crecen, se comprimen con `gltf-transform` (Draco/Meshopt +
     texturas KTX2) antes de subirlos.
+- **Sección 3D Web** (`pages/ThreeDWeb.jsx`, ruta propia vía `router/sectionPages.js`):
+  - El canvas es `sticky` y la narrativa son pantallas de scroll encima. `scrollY / alto` es la
+    línea de tiempo: despiece, cámara y modo técnico salen de curvas en `config/threeDWeb.js`, así
+    que todo es reversible. Las piezas y sus direcciones de despiece están en
+    `config/motorcycle.js` con los nombres reales de los nodos del GLB.
+  - Raycasting contra cajas proxy de cada pieza, no contra la malla (1.2 M de triángulos).
+  - Todos los datos que se muestran salen del modelo o del renderer (`gl.info`), nunca a mano.
 - **UI sobre la escena**: el HTML (títulos, textos) va en un `div` absoluto encima del canvas con
   `pointer-events-none`, para no bloquear la interacción con la escena. `<Html>` de drei solo se usa para cosas
   ancladas a un punto 3D.

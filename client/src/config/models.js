@@ -3,4 +3,5 @@ export const MODELS = {
   florCristal: '/models/flor_cristal2.glb',
   florNatural: '/models/flor_natural.glb',
   florInteractiva: '/models/flor_interactiva.glb',
+  motorcycle: '/models/yzfr-125-v1.glb',
 };

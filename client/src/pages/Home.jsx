@@ -6,6 +6,7 @@ import HeroIntro from '@/components/hero/HeroIntro';
 import { usePetalTransition } from '@/components/transition/petalTransitionContext';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { cn } from '@/lib/utils';
+import { loadSectionPage } from '@/router/sectionPages';
 import SceneCanvas from '@/three/canvas/SceneCanvas';
 import ViewOffset from '@/three/canvas/ViewOffset';
 import DriftingPetal from '@/three/effects/DriftingPetal';
@@ -43,9 +44,8 @@ const LAYOUT = {
 // Giro fijo de la flor (rad): la gira hacia un lado para que se vea de tres cuartos y no de frente.
 const FLOWER_ROTATION = [0.12, -0.6, 0];
 
-// Se descarga la página de sección en cuanto se pulsa un pétalo: cuando el pétalo tapa la cámara
-// (~1.9 s después) ya está lista y el cambio de ruta es inmediato.
-const preloadSection = () => import('@/pages/Section');
+// La página de la sección (y su modelo 3D si lo tiene) se descarga en cuanto se pulsa un pétalo:
+// cuando el pétalo tapa la cámara (~2 s después) ya está lista y el cambio de ruta es inmediato.
 
 function Home() {
   const isDesktop = useMediaQuery('(min-width: 768px)');
@@ -56,9 +56,9 @@ function Home() {
   const { cover } = usePetalTransition();
   const layout = isDesktop ? LAYOUT.desktop : LAYOUT.mobile;
 
-  const handlePetalStart = () => {
+  const handlePetalStart = section => {
     setLeaving(true);
-    preloadSection();
+    loadSectionPage(section.id);
   };
 
   // El pétalo cubre la cámara: la capa de transición toma el relevo y se cambia de ruta detrás.
