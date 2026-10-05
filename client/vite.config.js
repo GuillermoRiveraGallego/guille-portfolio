@@ -4,6 +4,9 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
+  // Se publica en GitHub Pages bajo /guille-portfolio/ (https://<usuario>.github.io/guille-portfolio/).
+  base: '/guille-portfolio/',
+
   plugins: [react(), tailwindcss()],
 
   resolve: {
