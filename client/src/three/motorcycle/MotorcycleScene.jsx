@@ -22,7 +22,13 @@ const LIGHTS = {
   rim: { position: [90, 260, -360], intensity: 2.6 },
   // La luz entra poco a poco al llegar a la sección.
   rampLambda: 1.2,
+  // Luz neutra de estudio (CREATE / OPTIMIZE, ver TIMELINE.lighting): las direccionales bajan y
+  // el entorno sube, una iluminación plana como la de un visor de modelado.
+  neutral: { directional: 0.22, environment: 1.6 },
 };
+
+// Rejilla de suelo (cm): muy sutil, solo mientras se "construye" el asset.
+const GRID = { size: 440, divisions: 22, color: '#6f747e', opacity: 0.28 };
 
 // Amortiguación del scroll: el desmontaje sigue al scroll sin ser mecánico.
 const SCROLL_LAMBDA = { motion: 4, reduced: 30 };
@@ -60,6 +66,7 @@ function MotorcycleScene({ store, mobile, motion, onReady, onHover, onSelect, on
     light: motion ? 0 : 1,
   });
   const metrics = useRef({ frames: 0, elapsed: 0 });
+  const grid = useRef(null);
   const keyLight = useRef(null);
   const fillLight = useRef(null);
   const rimLight = useRef(null);
@@ -82,9 +89,13 @@ function MotorcycleScene({ store, mobile, motion, onReady, onHover, onSelect, on
       rig,
       director,
       camera,
-      // Se puede inspeccionar con la moto bastante desmontada (o si ya hay una pieza abierta).
-      isInteractive: () =>
-        local.current.explosion >= TIMELINE.interactiveFrom || Boolean(store.selected),
+      // Hover y clic en las piezas desde el paso "Raycasting" de WEB hasta el cierre (o si ya hay
+      // una pieza abierta).
+      isInteractive: () => {
+        const [from, to] = TIMELINE.interactive;
+        const t = local.current.timeline;
+        return (t >= from && t <= to) || Boolean(store.selected);
+      },
       onSelect: part => callbacks.current.onSelect?.(part),
     });
     interaction.attach(canvas);
@@ -125,12 +136,22 @@ function MotorcycleScene({ store, mobile, motion, onReady, onHover, onSelect, on
         : null;
     director.update(dt, s.timeline, focus, interaction?.hasPointer ? interaction.pointer : null);
 
-    // Entrada de la luz.
+    // Entrada de la luz y paso de luz neutra (modelado) a luz de producto (WEB).
     s.light = damp(s.light, 1, LIGHTS.rampLambda, dt);
-    state.scene.environmentIntensity = LIGHTS.environment * s.light;
-    if (keyLight.current) keyLight.current.intensity = LIGHTS.key.intensity * s.light;
-    if (fillLight.current) fillLight.current.intensity = LIGHTS.fill.intensity * s.light;
-    if (rimLight.current) rimLight.current.intensity = LIGHTS.rim.intensity * s.light;
+    const studio = evaluateKeys(TIMELINE.lighting, s.timeline);
+    const directional =
+      s.light * (LIGHTS.neutral.directional + (1 - LIGHTS.neutral.directional) * studio);
+    state.scene.environmentIntensity =
+      LIGHTS.environment * s.light * (1 + (LIGHTS.neutral.environment - 1) * (1 - studio));
+    if (keyLight.current) keyLight.current.intensity = LIGHTS.key.intensity * directional;
+    if (fillLight.current) fillLight.current.intensity = LIGHTS.fill.intensity * directional;
+    if (rimLight.current) rimLight.current.intensity = LIGHTS.rim.intensity * directional;
+
+    const gridOpacity = evaluateKeys(TIMELINE.grid, s.timeline) * GRID.opacity * s.light;
+    if (grid.current) {
+      grid.current.material.opacity = gridOpacity;
+      grid.current.visible = gridOpacity > 0.002;
+    }
 
     // La sombra es de la moto montada (se pinta solo al principio): se desvanece al desmontarla.
     shadow.current?.traverse(child => {
@@ -164,6 +185,14 @@ function MotorcycleScene({ store, mobile, motion, onReady, onHover, onSelect, on
       <directionalLight ref={rimLight} position={LIGHTS.rim.position} intensity={0} />
 
       <primitive object={rig.root} />
+      <gridHelper
+        ref={grid}
+        args={[GRID.size, GRID.divisions, GRID.color, GRID.color]}
+        visible={false}
+        material-transparent
+        material-depthWrite={false}
+        material-opacity={0}
+      />
 
       {/* Sombra de contacto estática (se pinta en los primeros frames); en móvil no hay */}
       {!mobile && (

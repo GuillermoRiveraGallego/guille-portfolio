@@ -1,12 +1,19 @@
-// Formato compacto de cifras técnicas: 18432 → "18.4k", 1200424 → "1.20M".
+// Cifras en castellano: coma decimal y punto de miles.
+const decimal = (value, digits) => value.toFixed(digits).replace('.', ',');
+
+export const formatDecimal = value => decimal(value, 2);
+
+export const formatInteger = value => value.toLocaleString('es-ES', { useGrouping: 'always' });
+
+// Formato compacto de cifras técnicas: 18432 → "18,4 mil", 1200424 → "1,20 M".
 export function formatCount(value) {
-  if (value >= 1e6) return `${(value / 1e6).toFixed(2)}M`;
-  if (value >= 1e4) return `${(value / 1e3).toFixed(1)}k`;
-  return value.toLocaleString('en-US');
+  if (value >= 1e6) return `${decimal(value / 1e6, 2)} M`;
+  if (value >= 1e4) return `${decimal(value / 1e3, 1)} mil`;
+  return formatInteger(value);
 }
 
 export function formatBytes(bytes) {
-  if (bytes >= 1048576) return `${(bytes / 1048576).toFixed(1)} MB`;
+  if (bytes >= 1048576) return `${decimal(bytes / 1048576, 1)} MB`;
   return `${Math.round(bytes / 1024)} KB`;
 }
 
@@ -17,7 +24,7 @@ const EXTENSIONS = {
   EXT_meshopt_compression: 'Meshopt',
   KHR_texture_basisu: 'KTX2',
   KHR_materials_clearcoat: 'Clearcoat',
-  KHR_materials_transmission: 'Transmission',
+  KHR_materials_transmission: 'Transmisión',
   KHR_materials_specular: 'Specular',
 };
 

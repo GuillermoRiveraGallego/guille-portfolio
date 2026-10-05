@@ -6,6 +6,6 @@ export const PETAL_SECTIONS = {
   Petalo_1: SECTIONS.web,
   Petalo_2: SECTIONS.threeD,
   Petalo_3: SECTIONS.ai,
-  Petalo_4: SECTIONS.bim,
+  Petalo_4: SECTIONS.iot,
   Petalo_5: SECTIONS.performance,
 };

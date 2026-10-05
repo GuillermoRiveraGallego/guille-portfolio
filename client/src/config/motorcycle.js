@@ -14,7 +14,7 @@ export const MOTORCYCLE = {
 // lejos, el núcleo apenas se mueve. En móvil se multiplica por `mobileScale`.
 export const EXPLODE = {
   distance: [36, 28, 26, 18],
-  mobileScale: 0.62,
+  mobileScale: 0.45,
   // Inclinación al separarse (rad), alejándose del centro.
   tilt: 0.06,
   // Ventana de cada capa dentro del progreso 0..1: empieza en order * stagger y dura `span`.
@@ -28,58 +28,87 @@ export const EXPLODE = {
 // Piezas que se despiezan como una unidad (un nodo con sus hijos). `order`: capa (0 = exterior).
 // `dir`: dirección artística [x, y, z] si la radial no basta; `distance` en cm.
 // `mobile`: interactiva también en móvil (allí hay menos piezas seleccionables).
+// `label`: nombre visible en castellano (traducción del nombre del nodo).
 // Si no hay `dir`, sale en dirección radial desde el centro de la moto.
 export const MOTORCYCLE_PARTS = {
   // Carrocería y elementos exteriores.
-  Windscreen: { order: 0, dir: [0, 0.6, 1], distance: 38 },
-  FrontFairing: { order: 0, dir: [0, 0.25, 1], distance: 40, mobile: true },
-  SideFairing_L: { order: 0 },
-  SideFairing_R: { order: 0 },
-  LowerFairing_L: { order: 0, dir: [1, -0.5, 0.1] },
-  LowerFairing_R: { order: 0, dir: [-1, -0.5, 0.1] },
-  RearFairing: { order: 0, dir: [0, 0.5, -1], distance: 34 },
-  FrameCover: { order: 0, dir: [0, 1, 0], distance: 22 },
-  Mirror_L: { order: 0, dir: [1, 0.6, 0.4], distance: 32 },
-  Mirror_R: { order: 0, dir: [-1, 0.6, 0.4], distance: 32 },
-  Headlight: { order: 0, dir: [0, 0.1, 1], distance: 50 },
-  FrontIndicators: { order: 0, dir: [0, 0.35, 1], distance: 46 },
-  TailLight: { order: 0, dir: [0, 0.35, -1], distance: 44 },
-  RearIndicators: { order: 0, dir: [0, 0.1, -1], distance: 50 },
-  LicensePlate: { order: 0, dir: [0, -0.2, -1], distance: 52 },
-  PassengerSeat: { order: 0, dir: [0, 1, -0.6], distance: 34 },
+  Windscreen: { label: 'Cúpula', order: 0, dir: [0, 0.6, 1], distance: 38 },
+  FrontFairing: {
+    label: 'Carenado frontal',
+    order: 0,
+    dir: [0, 0.25, 1],
+    distance: 40,
+    mobile: true,
+  },
+  SideFairing_L: { label: 'Carenado lateral izq.', order: 0 },
+  SideFairing_R: { label: 'Carenado lateral der.', order: 0 },
+  LowerFairing_L: { label: 'Carenado inferior izq.', order: 0, dir: [1, -0.5, 0.1] },
+  LowerFairing_R: { label: 'Carenado inferior der.', order: 0, dir: [-1, -0.5, 0.1] },
+  RearFairing: { label: 'Colín', order: 0, dir: [0, 0.5, -1], distance: 34 },
+  FrameCover: { label: 'Tapa del chasis', order: 0, dir: [0, 1, 0], distance: 22 },
+  Mirror_L: { label: 'Retrovisor izq.', order: 0, dir: [1, 0.6, 0.4], distance: 32 },
+  Mirror_R: { label: 'Retrovisor der.', order: 0, dir: [-1, 0.6, 0.4], distance: 32 },
+  Headlight: { label: 'Faro', order: 0, dir: [0, 0.1, 1], distance: 50 },
+  FrontIndicators: { label: 'Intermitentes delanteros', order: 0, dir: [0, 0.35, 1], distance: 46 },
+  TailLight: { label: 'Piloto trasero', order: 0, dir: [0, 0.35, -1], distance: 44 },
+  RearIndicators: { label: 'Intermitentes traseros', order: 0, dir: [0, 0.1, -1], distance: 50 },
+  LicensePlate: { label: 'Matrícula', order: 0, dir: [0, -0.2, -1], distance: 52 },
+  PassengerSeat: { label: 'Asiento del pasajero', order: 0, dir: [0, 1, -0.6], distance: 34 },
 
   // Depósito, asiento, mandos y guardabarros.
-  FuelTank: { order: 1, dir: [0, 1, 0.15], distance: 40, mobile: true },
-  Seat: { order: 1, dir: [0, 1, -0.2], distance: 30, mobile: true },
-  Handlebar: { order: 1, dir: [0, 1, 0.3], distance: 26 },
-  InstrumentCluster: { order: 1, dir: [0, 1, 0.6], distance: 42 },
-  FrontFender: { order: 1, dir: [0, -0.3, 1], distance: 22 },
-  RearFender: { order: 1, dir: [0, 0.6, -1], distance: 24 },
-  PassengerFootrests: { order: 1, dir: [0, -0.4, -1], distance: 22 },
-  FootControls_L: { order: 1 },
-  FootControls_R: { order: 1 },
-  SideStand: { order: 1, dir: [1, -1, 0], distance: 20 },
+  FuelTank: { label: 'Depósito', order: 1, dir: [0, 1, 0.15], distance: 40, mobile: true },
+  Seat: { label: 'Asiento', order: 1, dir: [0, 1, -0.2], distance: 30, mobile: true },
+  Handlebar: { label: 'Manillar', order: 1, dir: [0, 1, 0.3], distance: 26 },
+  InstrumentCluster: { label: 'Cuadro de instrumentos', order: 1, dir: [0, 1, 0.6], distance: 42 },
+  FrontFender: { label: 'Guardabarros delantero', order: 1, dir: [0, -0.3, 1], distance: 22 },
+  RearFender: { label: 'Guardabarros trasero', order: 1, dir: [0, 0.6, -1], distance: 24 },
+  PassengerFootrests: {
+    label: 'Estriberas del pasajero',
+    order: 1,
+    dir: [0, -0.4, -1],
+    distance: 22,
+  },
+  FootControls_L: { label: 'Estribera izq.', order: 1 },
+  FootControls_R: { label: 'Estribera der.', order: 1 },
+  SideStand: { label: 'Pata de cabra', order: 1, dir: [1, -1, 0], distance: 20 },
 
   // Ruedas, suspensiones, frenos y escape.
-  FrontWheel: { order: 2, dir: [0, -0.15, 1], distance: 54, mobile: true },
-  FrontBrakeCaliper: { order: 2, dir: [0.4, -0.1, 1], distance: 34 },
-  FrontFork: { order: 2, dir: [0, 0.25, 1], distance: 26, mobile: true },
-  RearWheel: { order: 2, dir: [0, -0.15, -1], distance: 54, mobile: true },
-  RearBrakeCaliper: { order: 2, dir: [-0.4, -0.1, -1], distance: 36 },
-  Swingarm: { order: 2, dir: [0, -0.4, -1], distance: 24, mobile: true },
-  RearShock: { order: 2, dir: [0, 0.6, -0.3], distance: 16 },
-  Exhaust: { order: 2, dir: [-1, -0.3, -0.5], distance: 38, mobile: true },
-  Cables: { order: 2, dir: [0, 1, 0], distance: 12 },
+  FrontWheel: {
+    label: 'Rueda delantera',
+    order: 2,
+    dir: [0, -0.15, 1],
+    distance: 54,
+    mobile: true,
+  },
+  FrontBrakeCaliper: {
+    label: 'Pinza de freno delantera',
+    order: 2,
+    dir: [0.4, -0.1, 1],
+    distance: 34,
+  },
+  FrontFork: { label: 'Horquilla', order: 2, dir: [0, 0.25, 1], distance: 26, mobile: true },
+  RearWheel: { label: 'Rueda trasera', order: 2, dir: [0, -0.15, -1], distance: 54, mobile: true },
+  RearBrakeCaliper: {
+    label: 'Pinza de freno trasera',
+    order: 2,
+    dir: [-0.4, -0.1, -1],
+    distance: 36,
+  },
+  Swingarm: { label: 'Basculante', order: 2, dir: [0, -0.4, -1], distance: 24, mobile: true },
+  RearShock: { label: 'Amortiguador trasero', order: 2, dir: [0, 0.6, -0.3], distance: 16 },
+  Exhaust: { label: 'Escape', order: 2, dir: [-1, -0.3, -0.5], distance: 38, mobile: true },
+  Cables: { label: 'Cables', order: 2, dir: [0, 1, 0], distance: 12 },
 
   // Núcleo: el motor baja un poco y el chasis se queda como referencia.
-  Engine: { order: 3, dir: [0, -1, 0], distance: 20, mobile: true },
-  Chassis: { order: 3, distance: 0, mobile: true },
+  Engine: { label: 'Motor', order: 3, dir: [0, -1, 0], distance: 20, mobile: true },
+  Chassis: { label: 'Chasis', order: 3, distance: 0, mobile: true },
 };
 
 // Materiales que sí son vidrio: conservan la transmisión del GLB (ver motorcycleMaterials.js).
 export const GLASS_MATERIAL = /glass/i;
 
-// "FootControls_L" → "Foot controls L": el nombre visible sale del nodo, no se inventa.
+// Nombre visible por defecto si una pieza no tiene `label`: sale del nodo
+// ("FootControls_L" → "Foot controls L").
 export function partLabel(name) {
   return name
     .replace(/_/g, ' ')

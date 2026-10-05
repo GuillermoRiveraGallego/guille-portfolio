@@ -15,7 +15,7 @@ const PARALLAX = { az: 0.03, el: 0.014, lambda: 2.5 };
 const FOCUS = { distance: 6, min: 0.55, el: 0.16 };
 // En vertical los planos (pensados para pantallas apaisadas) se alejan para que la moto quepa a lo
 // ancho: distancia × MOBILE_FIT / aspect (nunca más cerca que en desktop).
-const MOBILE_FIT = 0.85;
+const MOBILE_FIT = 0.98;
 
 const tmpTarget = new Vector3();
 

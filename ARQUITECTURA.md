@@ -234,7 +234,7 @@ src/three/
   cámara, para que cualquier modelo se encuadre solo sea cual sea su escala.
 - **Controles**: solo donde el modelo se pueda explorar, con `OrbitControls` + `makeDefault`.
   `Bounds` funciona sin controles (la home no tiene).
-- **Transición de los pétalos** (home → `/web`, `/3d`, `/ai`, `/bim`, `/performance`):
+- **Transición de los pétalos** (home → `/web`, `/3d`, `/ai`, `/iot`, `/performance`):
   - `PetalTransitionController` (máquina de estados `IDLE → HOVER → PEELING → ESCAPING →
     RELEASED → FALLING → APPROACHING_CAMERA → COVERING_CAMERA → NAVIGATING → COMPLETE`) mueve el
     propio mesh del pétalo en el render loop. Primero separación, después caída: el pétalo se
@@ -265,8 +265,11 @@ src/three/
   - Los GLB son pesados (~7 MB). Si crecen, se comprimen con `gltf-transform` (Draco/Meshopt +
     texturas KTX2) antes de subirlos.
 - **Sección 3D Web** (`pages/ThreeDWeb.jsx`, ruta propia vía `router/sectionPages.js`):
+  - La narrativa es el propio pipeline: Create → Optimize → Web → Interact, contado con la moto.
+    Los datos técnicos son secundarios (una línea por capítulo y el panel Stats).
   - El canvas es `sticky` y la narrativa son pantallas de scroll encima. `scrollY / alto` es la
-    línea de tiempo: despiece, cámara y modo técnico salen de curvas en `config/threeDWeb.js`, así
+    línea de tiempo: vista técnica, luz, rejilla, despiece, cámara e interacción salen de curvas en
+    `config/threeDWeb.js`, así
     que todo es reversible. Las piezas y sus direcciones de despiece están en
     `config/motorcycle.js` con los nombres reales de los nodos del GLB.
   - Raycasting contra cajas proxy de cada pieza, no contra la malla (1.2 M de triángulos).

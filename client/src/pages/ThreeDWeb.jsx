@@ -4,10 +4,12 @@ import Chapter from '@/components/three-d/Chapter';
 import ChapterData from '@/components/three-d/ChapterData';
 import HoverLabel from '@/components/three-d/HoverLabel';
 import PartInspector from '@/components/three-d/PartInspector';
+import ScrollSteps from '@/components/three-d/ScrollSteps';
 import SectionNav from '@/components/three-d/SectionNav';
+import StatsPanel from '@/components/three-d/StatsPanel';
 import TechnicalControl from '@/components/three-d/TechnicalControl';
 import { MODELS } from '@/config/models';
-import { BACKGROUND, CHAPTERS, TECHNICAL_CHAPTERS } from '@/config/threeDWeb';
+import { BACKGROUND, CASE_STUDY_URL, CHAPTERS, TECHNICAL_CONTROL } from '@/config/threeDWeb';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { formatCount } from '@/lib/format';
 import SceneCanvas from '@/three/canvas/SceneCanvas';
@@ -20,12 +22,13 @@ import MotorcycleScene from '@/three/motorcycle/MotorcycleScene';
 // La cámara (fov, near/far en cm) la dirige CameraDirector.
 const LAYOUT = {
   desktop: { offset: { x: 0.15, y: 0.02 }, dpr: [1, 1.75] },
-  mobile: { offset: { x: 0, y: 0.17 }, dpr: [1, 1.5] },
+  mobile: { offset: { x: 0, y: 0.2 }, dpr: [1, 1.5] },
 };
 const CAMERA = { fov: 30, near: 2, far: 6000, position: [0, 80, 600] };
 
-// Sección 3D Web: la moto en un canvas fijo y la narrativa por encima, una pantalla por capítulo.
-// El scroll mueve la línea de tiempo (despiece, cámara, modo técnico) y es reversible.
+// Sección 3D Web: el pipeline completo (Create → Optimize → Web → Interact) contado con la moto.
+// La moto va en un canvas fijo y la narrativa por encima; el scroll mueve la línea de tiempo
+// (vista técnica, luz, cámara, despiece) y todo es reversible. Ver config/threeDWeb.js.
 function ThreeDWeb() {
   const mobile = !useMediaQuery('(min-width: 768px)');
   const motion = !useMediaQuery('(prefers-reduced-motion: reduce)');
@@ -35,12 +38,12 @@ function ThreeDWeb() {
   const [stats, setStats] = useState(null);
   const [fileSize, setFileSize] = useState(null);
   const [readyIn, setReadyIn] = useState(null);
-  const [activeChapter, setActiveChapter] = useState(CHAPTERS[0].id);
+  const [technicalVisible, setTechnicalVisible] = useState(false);
   const [selected, setSelected] = useState(null);
   const [focused, setFocused] = useState(false);
   const mountedAt = useRef(0);
   const hoverLabel = useRef(null);
-  const metricsRoot = useRef(null);
+  const statsPanel = useRef(null);
 
   useEffect(() => {
     mountedAt.current = performance.now();
@@ -49,7 +52,12 @@ function ThreeDWeb() {
 
   // Scroll → línea de tiempo (pantallas recorridas). La escena la amortigua.
   useEffect(() => {
-    const onScroll = () => store.setTimeline(window.scrollY / window.innerHeight);
+    const onScroll = () => {
+      const t = window.scrollY / window.innerHeight;
+      store.setTimeline(t);
+      // Solo re-renderiza al cruzar el tramo (React ignora el mismo valor).
+      setTechnicalVisible(t >= TECHNICAL_CONTROL[0] && t <= TECHNICAL_CONTROL[1]);
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll);
@@ -100,7 +108,7 @@ function ThreeDWeb() {
       triangles: formatCount(triangles),
       memory: `${geometries} · ${textures}`,
     };
-    for (const node of metricsRoot.current?.querySelectorAll('[data-metric]') ?? []) {
+    for (const node of statsPanel.current?.querySelectorAll('[data-metric]') ?? []) {
       node.textContent = values[node.dataset.metric];
     }
   }, []);
@@ -139,35 +147,39 @@ function ThreeDWeb() {
         </SceneCanvas>
       </div>
 
-      {/* Narrativa: una pantalla por capítulo encima del canvas, sin bloquear el arrastre */}
-      <div ref={metricsRoot} className="pointer-events-none relative -mt-[100svh]">
+      {/* Narrativa: capítulos encima del canvas, sin bloquear el arrastre */}
+      <div className="pointer-events-none relative -mt-[100svh]">
         {CHAPTERS.map((chapter, index) => (
-          <Chapter
-            key={chapter.id}
-            chapter={chapter}
-            onActive={setActiveChapter}
-            hidden={Boolean(selected)}
-          >
+          <Chapter key={chapter.id} chapter={chapter} hidden={Boolean(selected)}>
             {index === 0 && (
-              <p className="mt-16 text-[0.62rem] tracking-[0.22em] text-foreground/45 uppercase">
-                Scroll ↓
+              <p className="mt-7 text-[0.62rem] tracking-[0.22em] text-foreground/55 uppercase md:text-[0.78rem]">
+                Desliza ↓
               </p>
             )}
-            <ChapterData
-              type={chapter.data}
-              stats={stats}
-              fileSize={fileSize}
-              readyIn={readyIn}
-              mobile={mobile}
-            />
-            {chapter.id === 'web' && <SectionNav />}
+            {chapter.steps && <ScrollSteps steps={chapter.steps} checklist={chapter.checklist} />}
+            <ChapterData type={chapter.facts} stats={stats} fileSize={fileSize} mobile={mobile} />
+            {chapter.caseStudy && (
+              <a
+                href={CASE_STUDY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="pointer-events-auto mt-6 inline-block text-[0.62rem] tracking-[0.22em] text-foreground uppercase transition-opacity hover:opacity-60 md:text-[0.78rem]"
+              >
+                Leer el caso real ↗
+              </a>
+            )}
+            {chapter.nav && <SectionNav />}
           </Chapter>
         ))}
       </div>
 
-      <TechnicalControl
-        store={store}
-        visible={TECHNICAL_CHAPTERS.includes(activeChapter) && !selected}
+      <TechnicalControl store={store} visible={technicalVisible && !selected} />
+      <StatsPanel
+        stats={stats}
+        fileSize={fileSize}
+        readyIn={readyIn}
+        panelRef={statsPanel}
+        hidden={Boolean(selected)}
       />
       {!mobile && <HoverLabel labelRef={hoverLabel} />}
       <PartInspector part={selected} focused={focused} onFocus={handleFocus} onBack={handleBack} />

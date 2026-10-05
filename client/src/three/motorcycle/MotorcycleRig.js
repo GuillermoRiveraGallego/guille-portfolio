@@ -20,8 +20,9 @@ const HOVER_OFFSET = 1.4;
 // Presencia de las demás piezas: inspeccionando una / con la cámara enfocada en ella.
 const DIM = { inspect: 0.3, focus: 0.85 };
 const HIGHLIGHT = { hover: 0.55, selected: 0.75 };
-// Opacidad máxima de la malla técnica.
-const WIRE_OPACITY = 0.2;
+// Opacidad máxima de la malla técnica. En móvil menos: la moto ocupa pocos píxeles, la malla
+// queda muy apretada y con más opacidad se satura hasta verse negra.
+const WIRE_OPACITY = { desktop: 0.2, mobile: 0.1 };
 
 const UP = new Vector3(0, 1, 0);
 const tmpBox = new Box3();
@@ -129,7 +130,7 @@ export class MotorcycleRig {
 
     const part = {
       name,
-      label: partLabel(name),
+      label: config.label ?? partLabel(name),
       node,
       order,
       direction,
@@ -260,8 +261,9 @@ export class MotorcycleRig {
 
     this.uniforms.uTechnical.value = technical;
 
-    // En móvil no hay malla técnica: solo la arcilla.
-    const wire = this.mobile ? 0 : smoothstep(0.55, 1, technical) * WIRE_OPACITY;
+    // La malla solo existe (y solo cuesta) cuando se ve: se crea al entrar en modo técnico.
+    const wire =
+      smoothstep(0.55, 1, technical) * (this.mobile ? WIRE_OPACITY.mobile : WIRE_OPACITY.desktop);
     if (wire > 0.001) this.ensureWireframe();
     if (this.wireMeshes) {
       this.wireMaterial.opacity = wire;

@@ -7,6 +7,6 @@ export const PATHS = {
   web: '/web',
   threeD: '/3d',
   ai: '/ai',
-  bim: '/bim',
+  iot: '/iot',
   performance: '/performance',
 };

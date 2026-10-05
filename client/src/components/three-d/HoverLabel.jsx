@@ -17,7 +17,7 @@ function HoverLabel({ labelRef }) {
     <div ref={container} className="pointer-events-none fixed top-0 left-0 z-9" aria-hidden>
       <span
         ref={labelRef}
-        className="block text-[0.62rem] tracking-[0.22em] whitespace-nowrap text-foreground/70 uppercase opacity-0 transition-opacity duration-300"
+        className="block text-[0.8rem] tracking-[0.22em] whitespace-nowrap text-foreground/80 uppercase opacity-0 transition-opacity duration-300"
       />
     </div>
   );

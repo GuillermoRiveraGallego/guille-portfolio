@@ -28,13 +28,13 @@ export const SECTIONS = {
     tags: ['MCP', 'Agents', 'LLMs', 'Tool Use'],
     path: PATHS.ai,
   },
-  bim: {
-    id: 'bim',
+  iot: {
+    id: 'iot',
     number: '04',
-    label: 'BIM',
-    title: 'BIM & Digital Twins',
-    tags: ['BIM', 'Revit', 'ACC', 'Three.js', 'Data'],
-    path: PATHS.bim,
+    label: 'IoT',
+    title: 'IoT',
+    tags: ['Sensors', 'MQTT', 'Real-time data', 'Dashboards'],
+    path: PATHS.iot,
   },
   performance: {
     id: 'performance',
