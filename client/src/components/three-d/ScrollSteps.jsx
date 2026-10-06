@@ -7,7 +7,8 @@ import { cn } from '@/lib/utils';
 // - checklist: ○ → ✓ según se cumplen (WEB: Model, Lighting, Camera...);
 // - stages: resalta el paso actual (OPTIMIZE: Geometry → Materials → ...).
 // El estado se escribe en atributos del DOM desde el listener de scroll: sin estado de React.
-function ScrollSteps({ steps, checklist }) {
+// `compact`: solo se ve el paso actual (móvil, donde la lista entera taparía la escena).
+function ScrollSteps({ steps, checklist, compact }) {
   const items = useRef([]);
 
   useEffect(() => {
@@ -44,6 +45,7 @@ function ScrollSteps({ steps, checklist }) {
           data-state="pending"
           className={cn(
             'group transition-colors duration-500',
+            compact && 'not-data-[state=current]:hidden',
             checklist
               ? 'flex justify-between border-t border-foreground/15 py-1.5 text-foreground/35 data-[state=current]:text-foreground/85 data-[state=done]:text-foreground/85 md:py-2'
               : 'text-foreground/35 data-[state=current]:text-foreground data-[state=done]:text-foreground/55'
