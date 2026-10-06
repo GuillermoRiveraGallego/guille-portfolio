@@ -50,6 +50,15 @@ function ThreeDWeb() {
     fetchFileSize(MODELS.motorcycle).then(setFileSize);
   }, []);
 
+  // Fondo de la página del mismo gris que el final de la escena: al rebotar el scroll (móvil, Mac)
+  // asomaría el blanco del body como una franja por debajo de la moto.
+  useEffect(() => {
+    const targets = [document.documentElement, document.body];
+    const previous = targets.map(element => element.style.backgroundColor);
+    for (const element of targets) element.style.backgroundColor = BACKGROUND.bottom;
+    return () => targets.forEach((element, i) => (element.style.backgroundColor = previous[i]));
+  }, []);
+
   // Scroll → línea de tiempo (pantallas recorridas). La escena la amortigua.
   useEffect(() => {
     const onScroll = () => {
@@ -128,11 +137,14 @@ function ThreeDWeb() {
   }, [selected, handleBack]);
 
   return (
-    <div
-      className="relative"
-      style={{ background: `linear-gradient(${BACKGROUND.top}, ${BACKGROUND.bottom}) fixed` }}
-    >
-      <div className="sticky top-0 h-svh w-full">
+    <div className="relative" style={{ backgroundColor: BACKGROUND.bottom }}>
+      {/* El canvas ocupa el alto máximo de la pantalla (lvh): en móvil, al esconderse la barra del
+          navegador, no queda una franja por debajo. Detrás lleva el mismo degradado que la escena
+          (visible mientras carga), así un redondeo de medio píxel tampoco se nota. */}
+      <div
+        className="sticky top-0 h-lvh w-full"
+        style={{ background: `linear-gradient(${BACKGROUND.top}, ${BACKGROUND.bottom})` }}
+      >
         <SceneCanvas dpr={layout.dpr} camera={CAMERA}>
           <ViewOffset {...layout.offset} />
           <MotorcycleScene
@@ -148,7 +160,7 @@ function ThreeDWeb() {
       </div>
 
       {/* Narrativa: capítulos encima del canvas, sin bloquear el arrastre */}
-      <div className="pointer-events-none relative -mt-[100svh]">
+      <div className="pointer-events-none relative -mt-[100lvh]">
         {CHAPTERS.map((chapter, index) => (
           <Chapter key={chapter.id} chapter={chapter} hidden={Boolean(selected)}>
             {index === 0 && (

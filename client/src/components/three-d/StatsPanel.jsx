@@ -6,6 +6,8 @@ import { cn } from '@/lib/utils';
 // Capa técnica secundaria: datos reales del modelo y métricas del renderer en vivo, detrás de un
 // botón discreto para no competir con la moto. Las métricas (`data-metric`) las escribe la página
 // directamente en el DOM cada medio segundo; `panelRef` es el contenedor donde las busca.
+// El contenedor no recibe el puntero (solo el botón y el panel abierto): cerrado, el panel sigue
+// ocupando su hueco y en móvil taparía el control Realista ↔ Técnico, que queda debajo.
 function Row({ label, children }) {
   return (
     <div className="flex justify-between gap-6 border-t border-foreground/15 py-1.5">
@@ -25,8 +27,8 @@ function StatsPanel({ stats, fileSize, readyIn, panelRef, hidden }) {
   return (
     <div
       className={cn(
-        'fixed right-6 bottom-8 z-9 flex flex-col items-end text-[0.62rem] tracking-[0.12em] tabular-nums transition-opacity duration-500 md:right-[4vw] md:bottom-12 md:text-[0.74rem]',
-        hidden && 'pointer-events-none opacity-0'
+        'pointer-events-none fixed right-6 bottom-8 z-9 flex flex-col items-end text-[0.62rem] tracking-[0.12em] tabular-nums transition-opacity duration-500 md:right-[4vw] md:bottom-12 md:text-[0.74rem]',
+        hidden && 'opacity-0 [&_*]:pointer-events-none!'
       )}
     >
       <div
@@ -34,7 +36,7 @@ function StatsPanel({ stats, fileSize, readyIn, panelRef, hidden }) {
         id="three-d-stats"
         className={cn(
           'mb-4 w-[min(19rem,calc(100vw-3rem))] bg-background/75 px-4 pt-3 pb-2 backdrop-blur-md transition-[opacity,translate] duration-500 md:w-[22rem]',
-          open ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-2 opacity-0'
+          open ? 'pointer-events-auto translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
         )}
         aria-hidden={!open}
       >
@@ -78,7 +80,7 @@ function StatsPanel({ stats, fileSize, readyIn, panelRef, hidden }) {
         onClick={() => setOpen(value => !value)}
         aria-expanded={open}
         aria-controls="three-d-stats"
-        className="tracking-[0.22em] text-foreground/60 uppercase transition-colors hover:text-foreground"
+        className="pointer-events-auto tracking-[0.22em] text-foreground/60 uppercase transition-colors hover:text-foreground"
       >
         {open ? 'Cerrar datos' : 'Datos técnicos'}
       </button>
