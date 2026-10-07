@@ -9,7 +9,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useScrollTimeline } from '@/hooks/useScrollTimeline';
 
 // Sección AI & MCP: un agente convierte una frase en llamadas a herramientas de un servidor MCP
-// (Revit) y devuelve un plano. En negativo, para distinguirla del resto. Ver config/aiAgents.js.
+// (Revit) y devuelve un plano. Ver config/aiAgents.js.
 function AiMcp() {
   const mobile = !useMediaQuery('(min-width: 768px)');
   const motion = !useMediaQuery('(prefers-reduced-motion: reduce)');
@@ -20,7 +20,6 @@ function AiMcp() {
   return (
     <ScrollStory
       background={AI_BACKGROUND}
-      dark
       chapters={AI_CHAPTERS}
       next={SECTIONS.iot}
       compact={mobile}

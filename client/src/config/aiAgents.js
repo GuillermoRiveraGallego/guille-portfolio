@@ -5,8 +5,8 @@
 // intro 0, prompt 1, plan 2, mcp 3-4, resultado 5, final 6. Los elementos del escenario se
 // encienden con data-at / data-until (ver hooks/useScrollTimeline).
 
-// Fondo oscuro: la única sección en negativo del portfolio.
-export const AI_BACKGROUND = { top: '#0b0d11', bottom: '#15181e' };
+// Fondo claro, misma familia que el resto del portfolio: el acento es el halo del agente.
+export const AI_BACKGROUND = { top: '#e4e6eb', bottom: '#f4f5f7' };
 
 export const AI_PROMPT = 'Etiqueta las tuberías de la planta 2 y monta la lámina de fontanería.';
 

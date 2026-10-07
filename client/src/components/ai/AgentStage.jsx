@@ -29,7 +29,7 @@ function ToolNode({ tool, index }) {
             className="group/beam absolute inset-y-0 right-[16%] left-[42%]"
           >
             <span className="absolute inset-0 origin-left scale-x-0 bg-linear-to-r from-foreground/10 to-foreground/70 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-data-[state=current]/beam:scale-x-100 group-data-[state=done]/beam:scale-x-100 group-data-[state=done]/beam:opacity-30" />
-            <span className="absolute top-1/2 size-1.5 -translate-1/2 rounded-full bg-foreground opacity-0 shadow-[0_0_12px_2px_rgb(255_255_255/0.6)] group-data-[state=current]/beam:animate-travel motion-reduce:hidden" />
+            <span className="absolute top-1/2 size-1.5 -translate-1/2 rounded-full bg-foreground opacity-0 shadow-[0_0_10px_2px_rgb(124_140_255/0.55)] group-data-[state=current]/beam:animate-travel motion-reduce:hidden" />
           </div>
         )}
       </div>
@@ -39,8 +39,8 @@ function ToolNode({ tool, index }) {
         data-until={tool.until}
         className={cn(
           mono,
-          'absolute -translate-1/2 rounded-full bg-background/80 px-2 py-1 text-[8.5px] whitespace-nowrap text-foreground/45 ring-1 ring-foreground/15 backdrop-blur transition-[color,background-color,box-shadow,scale] duration-500 md:px-2.5 md:text-[10.5px]',
-          'data-[state=current]:scale-110 data-[state=current]:bg-foreground data-[state=current]:text-background data-[state=current]:shadow-[0_0_28px_4px_rgb(160_175_255/0.35)]',
+          'absolute -translate-1/2 rounded-full bg-white/85 px-2 py-1 text-[8.5px] whitespace-nowrap text-foreground/45 ring-1 ring-black/10 backdrop-blur transition-[color,background-color,box-shadow,scale] duration-500 md:px-2.5 md:text-[10.5px]',
+          'data-[state=current]:scale-110 data-[state=current]:bg-foreground data-[state=current]:text-background data-[state=current]:shadow-[0_0_28px_4px_rgb(124_140_255/0.45)]',
           'data-[state=done]:text-foreground/85 data-[state=done]:ring-foreground/35'
         )}
         style={{
@@ -63,8 +63,8 @@ function Core() {
       className="group/core absolute inset-[31%] transition-transform duration-700 data-[state=current]:scale-110"
     >
       <div className="absolute -inset-[18%] animate-[spin_9s_linear_infinite] rounded-full bg-[conic-gradient(from_0deg,#7c8cff,#4fd1c5,#c084fc,#f0abfc,#7c8cff)] opacity-45 blur-2xl transition-opacity duration-700 group-data-[state=current]/core:opacity-80 motion-reduce:animate-none" />
-      <div className="absolute inset-0 animate-[spin_5s_linear_infinite] rounded-full bg-[conic-gradient(from_0deg,rgb(255_255_255/0.9),transparent_35%,rgb(255_255_255/0.35)_60%,transparent_80%)] p-px motion-reduce:animate-none">
-        <div className="h-full w-full rounded-full bg-[#101318]" />
+      <div className="absolute inset-0 animate-[spin_5s_linear_infinite] rounded-full bg-[conic-gradient(from_0deg,rgb(20_22_28/0.75),transparent_35%,rgb(20_22_28/0.25)_60%,transparent_80%)] p-px motion-reduce:animate-none">
+        <div className="h-full w-full rounded-full bg-[#f7f8fa] shadow-[inset_0_-12px_30px_-18px_rgb(124_140_255/0.5)]" />
       </div>
       <div className="absolute inset-0 grid place-items-center text-center">
         <div>
@@ -100,11 +100,11 @@ function Console({ className }) {
     <div
       className={cn(
         mono,
-        'flex flex-col overflow-hidden rounded-xl bg-white/[0.035] text-[8.5px] leading-[1.75] ring-1 ring-white/10 backdrop-blur-md md:text-[10.5px]',
+        'flex flex-col overflow-hidden rounded-xl bg-white/75 text-[8.5px] leading-[1.75] shadow-[0_30px_60px_-40px_rgb(15_20_30/0.45)] ring-1 ring-black/8 backdrop-blur-md md:text-[10.5px]',
         className
       )}
     >
-      <div className="hidden items-center gap-1.5 border-b border-white/8 px-3 py-2 md:flex">
+      <div className="hidden items-center gap-1.5 border-b border-black/6 px-3 py-2 md:flex">
         <span className="size-1.5 rounded-full bg-foreground/25" />
         <span className="size-1.5 rounded-full bg-foreground/25" />
         <span className="size-1.5 rounded-full bg-foreground/25" />
@@ -154,7 +154,7 @@ function ResultSheet() {
       data-until={AI_RESULT[1]}
       className="group/sheet absolute inset-y-0 -inset-x-[18%] grid place-items-center opacity-0 transition-[opacity,scale] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] not-data-[state=current]:pointer-events-none not-data-[state=current]:scale-95 data-[state=current]:opacity-100"
     >
-      <div className="w-[min(440px,86%)] rounded-[3px] bg-[#f3f4f6] p-2.5 text-[#14161c] shadow-[0_40px_120px_-20px_rgb(124_140_255/0.45)] md:p-3.5">
+      <div className="w-[min(440px,86%)] rounded-[3px] bg-white p-2.5 text-[#14161c] shadow-[0_40px_100px_-30px_rgb(15_20_30/0.45),0_0_120px_-30px_rgb(124_140_255/0.5)] ring-1 ring-black/8 md:p-3.5">
         <div className="border border-[#14161c]/70 p-2">
           <svg viewBox="0 0 300 190" className="w-full" aria-hidden>
             <g fill="none" stroke="#14161c">

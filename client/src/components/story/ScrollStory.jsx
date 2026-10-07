@@ -1,14 +1,14 @@
 import Chapter from '@/components/three-d/Chapter';
 import ScrollSteps from '@/components/three-d/ScrollSteps';
 import SectionNav from '@/components/three-d/SectionNav';
-import { usePageTheme } from '@/hooks/usePageTheme';
+import { usePageBackground } from '@/hooks/usePageBackground';
 
 // Estructura común de las secciones contadas con el scroll (como /3d y /web): un escenario fijo
 // (sticky) a la derecha del texto en desktop y en la mitad de abajo en móvil, y los capítulos
 // pasando por encima. Cada capítulo puede llevar `steps` (ScrollSteps), `nav` (salida a `next`) y
 // contenido propio con `renderExtra(chapter)`.
-function ScrollStory({ background, dark, chapters, next, compact, stage, renderExtra }) {
-  usePageTheme(background.bottom, dark);
+function ScrollStory({ background, chapters, next, compact, stage, renderExtra }) {
+  usePageBackground(background.bottom);
 
   return (
     <div className="relative" style={{ backgroundColor: background.bottom }}>
