@@ -33,6 +33,63 @@
       transform: translateY(22px);
     }
   }
+
+  /* Paquetes que viajan por una conexión (AI, IoT): de un extremo a otro de su contenedor */
+  --animate-travel: travel 1.2s linear infinite;
+  --animate-travel-y: travel-y 1.4s linear infinite;
+
+  @keyframes travel {
+    from {
+      left: 0%;
+      opacity: 0;
+    }
+    15%,
+    85% {
+      opacity: 1;
+    }
+    to {
+      left: 100%;
+      opacity: 0;
+    }
+  }
+
+  @keyframes travel-y {
+    from {
+      top: 0%;
+      opacity: 0;
+    }
+    15%,
+    85% {
+      opacity: 1;
+    }
+    to {
+      top: 100%;
+      opacity: 0;
+    }
+  }
+
+  /* Chispas del 100 en Performance: cada una sale del anillo en su ángulo (--angle) */
+  --animate-burst: burst 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @keyframes burst {
+    from {
+      transform: rotate(var(--angle)) translateX(var(--from));
+      opacity: 1;
+    }
+    to {
+      transform: rotate(var(--angle)) translateX(var(--to));
+      opacity: 0;
+    }
+  }
+
+  /* Cursor del prompt */
+  --animate-caret: caret 1s steps(1) infinite;
+
+  @keyframes caret {
+    50% {
+      opacity: 0;
+    }
+  }
 }
 
 @theme inline {
